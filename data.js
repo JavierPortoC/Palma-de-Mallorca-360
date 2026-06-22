@@ -234,7 +234,7 @@ var APP_DATA = {
     },
     {
       "id": "5-06-habitacin-01",
-      "name": "06-HABITACIÓN-01",
+      "name": "06-HABITACIÓN-02",
       "levels": [
         {
           "tileSize": 256,
@@ -272,7 +272,7 @@ var APP_DATA = {
     },
     {
       "id": "6-07-habitacin-02",
-      "name": "07-HABITACIÓN-02",
+      "name": "07-HABITACIÓN-01",
       "levels": [
         {
           "tileSize": 256,

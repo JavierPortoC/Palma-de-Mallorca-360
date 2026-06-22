@@ -165,6 +165,114 @@
   var viewInElement = document.querySelector('#viewIn');
   var viewOutElement = document.querySelector('#viewOut');
 
+  // --- MINIMAP CONFIGURATION ---
+  // Ajusta las posiciones x e y (en porcentajes 0-100) para cada escena en el plano.
+  // El 0,0 es la esquina superior izquierda del minimapa.
+  var minimapConfig = {
+    "0-01-entrada": { x: 93, y: 35, floor: 1 },
+    "1-02-sala": { x: 52, y: 45, floor: 1 },
+    "2-03-piscina": { x: 21, y: 90, floor: 1 },
+    "3-04-pasillo-nivel-02": { x: 44, y: 33, floor: 2 },
+    "4-05-bao": { x: 34, y: 47, floor: 2 },
+    "5-06-habitacin-01": { x: 44, y: 65, floor: 2 }, // Corresponde a 06-HABITACIÓN-02
+    "6-07-habitacin-02": { x: 29, y: 33, floor: 2 }, // Corresponde a 07-HABITACIÓN-01
+    "7-08-habitacin-03": { x: 51, y: 61, floor: 2 },
+    "8-09-habitacin-04": { x: 62, y: 53, floor: 3 },
+    "9-10-altillo": { x: 29, y: 52, floor: 3 }
+  };
+
+  var minimapDotsElement = document.querySelector('#minimapDots');
+  var minimapImage = document.getElementById('minimapImage');
+  var allMinimapDots = [];
+
+  // Initialize minimap dots
+  scenes.forEach(function(scene) {
+    var config = minimapConfig[scene.data.id];
+    if (config) {
+      var dot = document.createElement('div');
+      dot.classList.add('minimap-dot');
+      dot.style.left = config.x + '%';
+      dot.style.top = config.y + '%';
+      dot.title = scene.data.name;
+      dot.addEventListener('click', function() {
+        switchScene(scene);
+      });
+      minimapDotsElement.appendChild(dot);
+      
+      allMinimapDots.push({
+        element: dot,
+        floor: config.floor,
+        sceneId: scene.data.id,
+        isLink: false
+      });
+    }
+  });
+
+  // --- MINIMAP LINKS ---
+  // Botones para navegar a otros pisos desde un piso específico
+  var minimapLinks = [
+    // Tercer piso -> bajar al 2
+    { targetId: "3-04-pasillo-nivel-02", name: "Bajar al Piso 2", x: 47, y: 18, floor: 3 },
+    // Segundo piso -> subir al 3
+    { targetId: "9-10-altillo", name: "Subir al Piso 3", x: 58, y: 15, floor: 2 },
+    // Segundo piso -> bajar al 1
+    { targetId: "1-02-sala", name: "Bajar al Piso 1", x: 58, y: 25, floor: 2 },
+    // Primer piso -> subir al 2
+    { targetId: "3-04-pasillo-nivel-02", name: "Subir al Piso 2", x: 48, y: 35, floor: 1 }
+  ];
+
+  minimapLinks.forEach(function(linkConfig) {
+    var targetScene = null;
+    for (var i = 0; i < scenes.length; i++) {
+      if (scenes[i].data.id === linkConfig.targetId) {
+        targetScene = scenes[i];
+        break;
+      }
+    }
+    if (targetScene) {
+      var dot = document.createElement('div');
+      dot.classList.add('minimap-dot');
+      dot.classList.add('minimap-floor-link');
+      dot.style.left = linkConfig.x + '%';
+      dot.style.top = linkConfig.y + '%';
+      dot.title = linkConfig.name;
+      dot.addEventListener('click', function() {
+        switchScene(targetScene);
+      });
+      minimapDotsElement.appendChild(dot);
+      
+      allMinimapDots.push({
+        element: dot,
+        floor: linkConfig.floor,
+        sceneId: null,
+        isLink: true
+      });
+    }
+  });
+
+  function updateMinimap(scene) {
+    var activeConfig = minimapConfig[scene.data.id];
+    if (activeConfig && minimapImage) {
+      minimapImage.src = 'img/plano_' + activeConfig.floor + '.png';
+    }
+
+    allMinimapDots.forEach(function(dotData) {
+      // Mostrar solo los puntos del piso actual
+      if (activeConfig && dotData.floor === activeConfig.floor) {
+        dotData.element.style.display = 'block';
+      } else {
+        dotData.element.style.display = 'none';
+      }
+
+      if (!dotData.isLink && dotData.sceneId === scene.data.id) {
+        dotData.element.classList.add('active');
+      } else {
+        dotData.element.classList.remove('active');
+      }
+    });
+  }
+
+
   // Dynamic parameters for controls.
   var velocity = 0.7;
   var friction = 3;
@@ -189,6 +297,7 @@
     startAutorotate();
     updateSceneName(scene);
     updateSceneList(scene);
+    updateMinimap(scene);
   }
 
   function updateSceneName(scene) {
